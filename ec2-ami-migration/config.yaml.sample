@@ -1,0 +1,32 @@
+# Copy to config.yaml and adjust values before running migrate.py
+
+# Target AWS account that will receive shared AMIs and snapshots
+target_account_id: "123456789012"
+
+# SNS topic for per-AMI and final summary notifications
+sns_topic_arn: "arn:aws:sns:ap-south-1:111111111111:ami-migration-alerts"
+
+# AWS region where source EC2 instances run
+region: ap-south-1
+
+# Maximum parallel workers for AMI creation and post-available actions
+max_parallel_workers: 5
+
+# Seconds between AMI status polls
+polling_interval_seconds: 30
+
+# Optional prefix prepended to AMI names (empty string = none)
+# Resulting name: [prefix]migration-<instance-name>-<timestamp>
+ami_name_prefix: ""
+
+# Local state file path (enables resume after interruption)
+state_file: migration_state.json
+
+# Log file path (console logging is always enabled)
+log_file: ami_migration.log
+
+# Create images without rebooting instances (faster, may be less consistent)
+no_reboot: false
+
+# When true, retry instances marked failed on a previous run
+retry_failed_on_resume: false
