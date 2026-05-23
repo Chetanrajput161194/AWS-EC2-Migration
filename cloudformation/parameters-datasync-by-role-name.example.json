@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "DataSyncAccessRoleArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "DataSyncAccessRoleName",
+    "ParameterValue": "opc-s3-datasync-iam-datasync-s3"
+  },
+  {
+    "ParameterKey": "AwsRegion",
+    "ParameterValue": "ap-south-1"
+  },
+  {
+    "ParameterKey": "CreateDestinationBuckets",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "StartTaskExecutionOnCreate",
+    "ParameterValue": "false"
+  }
+]

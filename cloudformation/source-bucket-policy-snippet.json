@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDataSyncRoleFromDestinationAccount",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::DESTINATION_ACCOUNT_ID:role/opc-s3-datasync-iam-datasync-s3"
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetObjectTagging",
+        "s3:GetObjectVersionTagging",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::opc-cloud-cb",
+        "arn:aws:s3:::opc-cloud-cb/*",
+        "arn:aws:s3:::opc-cloud-s3",
+        "arn:aws:s3:::opc-cloud-s3/*",
+        "arn:aws:s3:::opc-cloud-s3-dev",
+        "arn:aws:s3:::opc-cloud-s3-dev/*",
+        "arn:aws:s3:::opc-cloud-s3-test",
+        "arn:aws:s3:::opc-cloud-s3-test/*",
+        "arn:aws:s3:::opc-cloud-s3-uat",
+        "arn:aws:s3:::opc-cloud-s3-uat/*",
+        "arn:aws:s3:::opc-ds3",
+        "arn:aws:s3:::opc-ds3/*",
+        "arn:aws:s3:::opc-ps3",
+        "arn:aws:s3:::opc-ps3/*",
+        "arn:aws:s3:::onedios-prod",
+        "arn:aws:s3:::onedios-prod/*",
+        "arn:aws:s3:::onedios-qa",
+        "arn:aws:s3:::onedios-qa/*",
+        "arn:aws:s3:::onedios-uat",
+        "arn:aws:s3:::onedios-uat/*"
+      ]
+    }
+  ]
+}

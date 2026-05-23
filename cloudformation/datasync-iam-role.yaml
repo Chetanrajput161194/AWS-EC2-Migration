@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Optional IAM role for AWS DataSync S3 migration. Deploy only if you need
+  CloudFormation to create the role; otherwise pass an existing role ARN or
+  name directly to datasync-tasks.yaml.
+
+Parameters:
+  RoleNameSuffix:
+    Type: String
+    Default: datasync-s3
+    Description: Suffix for the IAM role name ({StackName}-{suffix}).
+
+Mappings:
+  BucketPairs:
+    CloudCb:
+      Source: opc-cloud-cb
+      Destination: opc-rm-cloud-cb
+    CloudS3:
+      Source: opc-cloud-s3
+      Destination: opc-rm-cloud-s3
+    CloudS3Dev:
+      Source: opc-cloud-s3-dev
+      Destination: opc-rm-cloud-s3-dev
+    CloudS3Test:
+      Source: opc-cloud-s3-test
+      Destination: opc-rm-cloud-s3-test
+    CloudS3Uat:
+      Source: opc-cloud-s3-uat
+      Destination: opc-rm-cloud-s3-uat
+    Ds3:
+      Source: opc-ds3
+      Destination: opc-rm-ds3
+    Ps3:
+      Source: opc-ps3
+      Destination: opc-rm-ps3
+    OnediosProd:
+      Source: onedios-prod
+      Destination: od-crm-prod
+    OnediosQa:
+      Source: onedios-qa
+      Destination: od-crm-qa
+    OnediosUat:
+      Source: onedios-uat
+      Destination: od-uat
+
+Resources:
+  DataSyncS3AccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-${RoleNameSuffix}"
+      Description: DataSync service role for cross-account/public source reads and destination writes.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: datasync.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Policies:
+        - PolicyName: DataSyncS3Migration
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SourceBucketList
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudCb, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Test, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, Ds3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, Ps3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosProd, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosQa, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosUat, Source]
+              - Sid: SourceObjectRead
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectTagging
+                  - s3:GetObjectVersion
+                  - s3:GetObjectVersionTagging
+                  - s3:GetObjectAcl
+                  - s3:GetObjectVersionAcl
+                Resource:
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudCb, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Test, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, Ds3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, Ps3, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosProd, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosQa, Source]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosUat, Source]
+              - Sid: DestinationBucketFullAccess
+                Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudCb, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudCb, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Test, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Test, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, Ds3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, Ds3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, Ps3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, Ps3, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosProd, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosProd, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosQa, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosQa, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}"
+                    - Bucket: !FindInMap [BucketPairs, OnediosUat, Destination]
+                  - !Sub
+                    - "arn:aws:s3:::${Bucket}/*"
+                    - Bucket: !FindInMap [BucketPairs, OnediosUat, Destination]
+
+Outputs:
+  DataSyncRoleArn:
+    Description: IAM role ARN — use as DataSyncAccessRoleArn on datasync-tasks deploy
+    Value: !GetAtt DataSyncS3AccessRole.Arn
+
+  DataSyncRoleName:
+    Description: IAM role name — use as DataSyncAccessRoleName on datasync-tasks deploy
+    Value: !Ref DataSyncS3AccessRole

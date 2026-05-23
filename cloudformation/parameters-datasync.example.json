@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "DataSyncAccessRoleArn",
+    "ParameterValue": "arn:aws:iam::DESTINATION_ACCOUNT_ID:role/YOUR_EXISTING_ROLE_NAME"
+  },
+  {
+    "ParameterKey": "DataSyncAccessRoleName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "AwsRegion",
+    "ParameterValue": "ap-south-1"
+  },
+  {
+    "ParameterKey": "CreateDestinationBuckets",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "StartTaskExecutionOnCreate",
+    "ParameterValue": "false"
+  }
+]

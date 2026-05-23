@@ -1,0 +1,776 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  AWS DataSync locations and tasks for S3 bucket migration. Pass an existing
+  IAM role (created manually or outside this repo). No cross-stack exports required.
+
+Parameters:
+  DataSyncAccessRoleArn:
+    Type: String
+    Default: ""
+    Description: >
+      Full ARN of an existing IAM role trusted by datasync.amazonaws.com.
+      Provide this OR DataSyncAccessRoleName (not both required if name is set).
+    AllowedPattern: "^$|^arn:aws:iam::[0-9]{12}:role/.+$"
+
+  DataSyncAccessRoleName:
+    Type: String
+    Default: ""
+    Description: >
+      IAM role name in this account (e.g. opc-s3-datasync-iam-datasync-s3).
+      Used when DataSyncAccessRoleArn is left empty.
+
+  AwsRegion:
+    Type: String
+    Default: ap-south-1
+    Description: Region for CLI hints in outputs.
+
+  CreateDestinationBuckets:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "false"
+    Description: Create empty destination buckets if they do not exist yet.
+
+  StartTaskExecutionOnCreate:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "false"
+    Description: Start an initial task execution when each DataSync task is created.
+
+Conditions:
+  CreateBuckets: !Equals [!Ref CreateDestinationBuckets, "true"]
+  StartOnCreate: !Equals [!Ref StartTaskExecutionOnCreate, "true"]
+  UseRoleArn: !Not [!Equals [!Ref DataSyncAccessRoleArn, ""]]
+
+Mappings:
+  BucketPairs:
+    CloudCb:
+      Source: opc-cloud-cb
+      Destination: opc-rm-cloud-cb
+    CloudS3:
+      Source: opc-cloud-s3
+      Destination: opc-rm-cloud-s3
+    CloudS3Dev:
+      Source: opc-cloud-s3-dev
+      Destination: opc-rm-cloud-s3-dev
+    CloudS3Test:
+      Source: opc-cloud-s3-test
+      Destination: opc-rm-cloud-s3-test
+    CloudS3Uat:
+      Source: opc-cloud-s3-uat
+      Destination: opc-rm-cloud-s3-uat
+    Ds3:
+      Source: opc-ds3
+      Destination: opc-rm-ds3
+    Ps3:
+      Source: opc-ps3
+      Destination: opc-rm-ps3
+    OnediosProd:
+      Source: onedios-prod
+      Destination: od-crm-prod
+    OnediosQa:
+      Source: onedios-qa
+      Destination: od-crm-qa
+    OnediosUat:
+      Source: onedios-uat
+      Destination: od-uat
+
+Resources:
+  DestBucketCloudCb:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, CloudCb, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketCloudS3:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, CloudS3, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketCloudS3Dev:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, CloudS3Dev, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketCloudS3Test:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, CloudS3Test, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketCloudS3Uat:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, CloudS3Uat, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketDs3:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, Ds3, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketPs3:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, Ps3, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketOnediosProd:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, OnediosProd, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketOnediosQa:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, OnediosQa, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DestBucketOnediosUat:
+    Type: AWS::S3::Bucket
+    Condition: CreateBuckets
+    Properties:
+      BucketName: !FindInMap [BucketPairs, OnediosUat, Destination]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  SourceLocationCloudCb:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudCb, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationCloudS3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationCloudS3Dev:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationCloudS3Test:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Test, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationCloudS3Uat:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationDs3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, Ds3, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationPs3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, Ps3, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationOnediosProd:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosProd, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationOnediosQa:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosQa, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  SourceLocationOnediosUat:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosUat, Source]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationCloudCb:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudCb, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationCloudS3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationCloudS3Dev:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Dev, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationCloudS3Test:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Test, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationCloudS3Uat:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, CloudS3Uat, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationDs3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, Ds3, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationPs3:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, Ps3, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationOnediosProd:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosProd, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationOnediosQa:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosQa, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  DestLocationOnediosUat:
+    Type: AWS::DataSync::LocationS3
+    Properties:
+      S3BucketArn: !Sub
+        - "arn:aws:s3:::${Bucket}"
+        - Bucket: !FindInMap [BucketPairs, OnediosUat, Destination]
+      S3Config:
+        BucketAccessRoleArn: !If
+          - UseRoleArn
+          - !Ref DataSyncAccessRoleArn
+          - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  TaskCloudCb:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-cloud-cb-to-opc-rm-cloud-cb
+      SourceLocationArn: !GetAtt SourceLocationCloudCb.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationCloudCb.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, CloudCb, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, CloudCb, Destination]
+
+  TaskCloudS3:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-cloud-s3-to-opc-rm-cloud-s3
+      SourceLocationArn: !GetAtt SourceLocationCloudS3.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationCloudS3.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, CloudS3, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, CloudS3, Destination]
+
+  TaskCloudS3Dev:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-cloud-s3-dev-to-opc-rm-cloud-s3-dev
+      SourceLocationArn: !GetAtt SourceLocationCloudS3Dev.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationCloudS3Dev.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, CloudS3Dev, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, CloudS3Dev, Destination]
+
+  TaskCloudS3Test:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-cloud-s3-test-to-opc-rm-cloud-s3-test
+      SourceLocationArn: !GetAtt SourceLocationCloudS3Test.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationCloudS3Test.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, CloudS3Test, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, CloudS3Test, Destination]
+
+  TaskCloudS3Uat:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-cloud-s3-uat-to-opc-rm-cloud-s3-uat
+      SourceLocationArn: !GetAtt SourceLocationCloudS3Uat.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationCloudS3Uat.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, CloudS3Uat, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, CloudS3Uat, Destination]
+
+  TaskDs3:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-ds3-to-opc-rm-ds3
+      SourceLocationArn: !GetAtt SourceLocationDs3.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationDs3.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, Ds3, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, Ds3, Destination]
+
+  TaskPs3:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: opc-ps3-to-opc-rm-ps3
+      SourceLocationArn: !GetAtt SourceLocationPs3.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationPs3.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, Ps3, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, Ps3, Destination]
+
+  TaskOnediosProd:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: onedios-prod-to-od-crm-prod
+      SourceLocationArn: !GetAtt SourceLocationOnediosProd.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationOnediosProd.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, OnediosProd, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, OnediosProd, Destination]
+
+  TaskOnediosQa:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: onedios-qa-to-od-crm-qa
+      SourceLocationArn: !GetAtt SourceLocationOnediosQa.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationOnediosQa.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, OnediosQa, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, OnediosQa, Destination]
+
+  TaskOnediosUat:
+    Type: AWS::DataSync::Task
+    Properties:
+      Name: onedios-uat-to-od-uat
+      SourceLocationArn: !GetAtt SourceLocationOnediosUat.LocationArn
+      DestinationLocationArn: !GetAtt DestLocationOnediosUat.LocationArn
+      Options:
+        TransferMode: CHANGED
+        VerifyMode: ONLY_FILES_TRANSFERRED
+        OverwriteMode: ALWAYS
+        Atime: BEST_EFFORT
+        Mtime: PRESERVE
+        PreserveDeletedFiles: PRESERVE
+        PreserveDevices: NONE
+        PosixPermissions: NONE
+        TaskQueueing: ENABLED
+      Tags:
+        - Key: SourceBucket
+          Value: !FindInMap [BucketPairs, OnediosUat, Source]
+        - Key: DestinationBucket
+          Value: !FindInMap [BucketPairs, OnediosUat, Destination]
+
+  ExecCloudCb:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskCloudCb
+
+  ExecCloudS3:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskCloudS3
+
+  ExecCloudS3Dev:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskCloudS3Dev
+
+  ExecCloudS3Test:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskCloudS3Test
+
+  ExecCloudS3Uat:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskCloudS3Uat
+
+  ExecDs3:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskDs3
+
+  ExecPs3:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskPs3
+
+  ExecOnediosProd:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskOnediosProd
+
+  ExecOnediosQa:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskOnediosQa
+
+  ExecOnediosUat:
+    Type: AWS::DataSync::TaskExecution
+    Condition: StartOnCreate
+    Properties:
+      TaskArn: !Ref TaskOnediosUat
+
+Outputs:
+  DataSyncAccessRoleArnUsed:
+    Description: IAM role ARN used for all DataSync S3 locations
+    Value: !If
+      - UseRoleArn
+      - !Ref DataSyncAccessRoleArn
+      - !Sub "arn:aws:iam::${AWS::AccountId}:role/${DataSyncAccessRoleName}"
+
+  TaskArns:
+    Description: DataSync task ARNs (comma-separated)
+    Value: !Join
+      - ","
+      - - !Ref TaskCloudCb
+        - !Ref TaskCloudS3
+        - !Ref TaskCloudS3Dev
+        - !Ref TaskCloudS3Test
+        - !Ref TaskCloudS3Uat
+        - !Ref TaskDs3
+        - !Ref TaskPs3
+        - !Ref TaskOnediosProd
+        - !Ref TaskOnediosQa
+        - !Ref TaskOnediosUat
+
+  StartExecutionCommand:
+    Description: Example CLI to start all migrations
+    Value: !Sub |
+      for TASK in ${TaskCloudCb} ${TaskCloudS3} ${TaskCloudS3Dev} ${TaskCloudS3Test} ${TaskCloudS3Uat} ${TaskDs3} ${TaskPs3} ${TaskOnediosProd} ${TaskOnediosQa} ${TaskOnediosUat}; do
+        aws datasync start-task-execution --task-arn "$TASK" --region ${AwsRegion}
+      done
